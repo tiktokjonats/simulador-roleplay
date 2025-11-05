@@ -316,10 +316,6 @@
   function setListening(v){ window.__listening=!!v; updateMicButtons(); }
   function setRecStatus(t){ statusPill.textContent=t; }
   /* Keys OpenAI */
-  let OPENAI_API_KEYS=["aqui",
-"2do aqui", ]; let apiIdx=0;
-  const getKey=()=>OPENAI_API_KEYS[apiIdx%OPENAI_API_KEYS.length]; const nextKey=()=>apiIdx=(apiIdx+1)%OPENAI_API_KEYS.length;
-
   /* Prompts */
   const promptsIniciales={
     banco:`Eres una persona a la que acaban de llamar por teléfono, pero al inicio NO sabes por qué te llaman.
@@ -836,4 +832,5 @@ Responde en 1–3 frases.`,
   </script>
 </body>
 </html>
+
 
