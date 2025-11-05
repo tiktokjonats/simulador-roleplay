@@ -754,7 +754,48 @@ Responde en 1–3 frases.`,
   }
   function pauseListening(){ if(!recognition || !recognitionListening()) return; conversationPaused=true; try{recognition.stop();}catch{} setRecStatus('Pausada'); setListening(false); }
   async function resumeListening(){ if(conversationLocked) return alert('Esta conversación fue finalizada. Inicia una nueva.'); if(!recognition || !conversationPaused) return; await startListening(); }
-  function stopListeningAndLock(){ if(recognitionListening()){ try{recognition.stop();}catch{} } chat.classList.remove('blurred'); conversationLocked=true; queue=[]; processing=false; setRecStatus('Conversación finalizada'); updateMicButtons(); alert('Conversación finalizada. El chat ahora es visible y no se puede continuar esta misma conversación.'); }
+  function stopListeningAndLock(){ if(recognitionListening()){ try{recognition.stop();}catch{} } chat.classList.remove('blurred'); conversationLocked=true; queue=[];   // ==== Guardar conversación en Supabase (versión segura) ====
+  try {
+    const mensajes = Array.from(document.querySelectorAll('.msg')).map(m => ({
+      role: m.classList.contains('asesor') ? 'asesor' : 'cliente',
+      text: m.textContent.replace(/^👤 Asesor: |^🤖 Cliente: /, '').trim(),
+      breakpoint: m.dataset.breakpoint || null,
+      ts: new Date().toISOString()
+    }));
+
+    const datos = {
+      session_id: 'ses-' + Date.now(),
+      advisor_name: 'Asesor de práctica',
+      client_name: document.querySelector('#rz')?.value || null,
+      client_doc: document.querySelector('#doc')?.value || null,
+      client_type: document.querySelector('#tipoClienteSel')?.value || null,
+      metadata: {
+        direccion: document.querySelector('#dir')?.value || null,
+        edad: document.querySelector('#edad')?.value || null,
+        salario: document.querySelector('#sal')?.value || null
+      },
+      messages: mensajes
+    };
+
+    fetch('/api/saveConversation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos)
+    })
+    .then(r => r.json())
+    .then(j => {
+      if (j.ok) {
+        console.log('✅ Guardado exitoso en Supabase. ID:', j.id);
+      } else {
+        console.warn('⚠️ Error al guardar:', j.error);
+      }
+    })
+    .catch(e => console.error('❌ Fallo al enviar:', e));
+  } catch (err) {
+    console.error('❌ Error en guardado Supabase:', err);
+  }
+  // ==== Fin guardado ====
+ processing=false; setRecStatus('Conversación finalizada'); updateMicButtons(); alert('Conversación finalizada. El chat ahora es visible y no se puede continuar esta misma conversación.'); }
   btnStart.addEventListener('click',startListening); btnPause.addEventListener('click',pauseListening); btnResume.addEventListener('click',resumeListening); btnStop.addEventListener('click',stopListeningAndLock);
 
   /* Botones generales */
@@ -795,3 +836,4 @@ Responde en 1–3 frases.`,
   </script>
 </body>
 </html>
+
